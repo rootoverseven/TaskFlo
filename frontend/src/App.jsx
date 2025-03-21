@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const BASEURL = "http://localhost:5000";
+const BASEURL = "https://taskflo-jkoi.onrender.com";
 
 const App = () => {
     const [todos, setTodos] = useState([]);
