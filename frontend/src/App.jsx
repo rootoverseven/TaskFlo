@@ -55,7 +55,7 @@ const App = () => {
         }
     };
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString, t) => {
       const date = new Date(dateString);
       const day = String(date.getDate()).padStart(2, '0');
       const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
@@ -63,7 +63,7 @@ const App = () => {
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       const seconds = String(date.getSeconds()).padStart(2, '0');
-      return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`;
+      return t=="d" ? `${day}/${month}/${year}`:`${hours}:${minutes}:${seconds}`;
   };
   
     return (
@@ -75,8 +75,8 @@ const App = () => {
                         <tr>
                             <th>ID</th>
                             <th>Todo</th>
-                            <th>Created At</th>
-                            {/* <th>Updated At</th> */}
+                            <th>Created</th>
+                            {/* <th>Time At</th> */}
                         </tr>
                     </thead>
                     <tbody>
@@ -84,8 +84,8 @@ const App = () => {
                             <tr key={todo.id}>
                                 <td>{todo.id}</td>
                                 <td>{todo.todo}</td>
-                                <td>{formatDate(todo.createdAt)}</td>
-                                {/* <td>{formatDate(todo.updatedAt)}</td> */}
+                                <td>{formatDate(todo.createdAt, "d")}</td>
+                                {/* <td>{formatDate(todo.updatedAt, "t")}</td> */}
                             </tr>
                         ))}
                     </tbody>
@@ -113,7 +113,7 @@ const App = () => {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Type a message..."
-                        onKeyPress={(e) => {
+                        onKeyDown={(e) => {
                             if (e.key === 'Enter') handleSendMessage();
                         }}
                     />

@@ -3,7 +3,7 @@ body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
   /* background: linear-gradient(135deg, #1e1e2f, #2a2a40); */
-  background: url("./assets/bg.jpg");
+  background: url("./assets/ab.jpg");
   color: #fff;
   display: flex;
   justify-content: center;
@@ -23,7 +23,7 @@ body {
 
 /* Todo List Styles */
 .todo-list {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(10px);
   border-radius: 20px;
   padding: 1.5rem;
@@ -106,6 +106,7 @@ body {
 
 .typing {
   display: flex;
+  width: max-content;
   align-items: center;
 }
 
