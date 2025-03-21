@@ -92,7 +92,7 @@ const App = () => {
                 </table>
             </div>
             <div className="chat-interface">
-                <h2>Chat with AI</h2>
+                <h2>Chat with AI Agent</h2>
                 <div className="chat-history">
                     {chatHistory.map((chat, index) => (
                         <div key={index} className={`chat-message ${chat.type}`}>
