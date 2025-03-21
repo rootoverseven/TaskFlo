@@ -1,0 +1,136 @@
+openapi: 3.0.0
+info:
+  title: Todo List AI Agent API
+  description: API for managing todos and interacting with the AI agent.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+paths:
+  /api/todos:
+    get:
+      summary: Get all todos
+      description: Retrieve a list of all todos.
+      responses:
+        '200':
+          description: A list of todos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+    post:
+      summary: Create a new todo
+      description: Add a new todo to the list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                todo:
+                  type: string
+                  description: The todo task.
+              example:
+                todo: Buy groceries
+      responses:
+        '200':
+          description: The ID of the created todo.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the created todo.
+  /api/todos/{id}:
+    delete:
+      summary: Delete a todo by ID
+      description: Remove a todo from the list by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The ID of the todo to delete.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Todo deleted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the deletion was successful.
+  /api/todos/search:
+    get:
+      summary: Search todos
+      description: Search for todos matching a query.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: The search query.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of matching todos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+  /api/chat:
+    post:
+      summary: Chat with the AI agent
+      description: Interact with the AI agent to manage todos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The message to send to the AI agent.
+              example:
+                message: Add a task for shopping groceries.
+      responses:
+        '200':
+          description: The AI agent's response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    description: The AI agent's response.
+components:
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The unique ID of the todo.
+        todo:
+          type: string
+          description: The todo task.
+        created_at:
+          type: string
+          format: date-time
+          description: The timestamp when the todo was created.
+        updated_at:
+          type: string
+          format: date-time
+          description: The timestamp when the todo was last updated.
