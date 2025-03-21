@@ -2,10 +2,8 @@
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  /* background: linear-gradient(135deg, #1e1e2f, #2a2a40);
-   */
-
-   background: url(./assets/bg.jpg);
+  /* background: linear-gradient(135deg, #1e1e2f, #2a2a40); */
+  background: url("./assets/bg.jpg");
   color: #fff;
   display: flex;
   justify-content: center;
@@ -15,10 +13,12 @@ body {
 
 .app {
   display: flex;
+  flex-direction: column;
   gap: 2rem;
   padding: 2rem;
   max-width: 1200px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* Todo List Styles */
@@ -28,7 +28,7 @@ body {
   border-radius: 20px;
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  flex: 1;
+  /* width: 100%; */
 }
 
 .todo-list h2 {
@@ -65,7 +65,7 @@ body {
   border-radius: 20px;
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  flex: 1;
+  /* width: 100%; */
   display: flex;
   flex-direction: column;
 }
@@ -168,4 +168,65 @@ body {
 
 .chat-input button:hover {
   background: linear-gradient(135deg, #4a6cf7, #6e8efb);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .app {
+    flex-direction: row;
+  }
+
+  .todo-list,
+  .chat-interface {
+    flex: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .app {
+    padding: 1rem;
+  }
+
+  .todo-list h2,
+  .chat-interface h2 {
+    font-size: 1.25rem;
+  }
+
+  .todo-list th,
+  .todo-list td {
+    padding: 0.5rem;
+  }
+
+  .chat-message {
+    max-width: 90%;
+  }
+
+  .chat-input {
+    flex-direction: column;
+  }
+
+  .chat-input button {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .todo-list h2,
+  .chat-interface h2 {
+    font-size: 1rem;
+  }
+
+  .todo-list th,
+  .todo-list td {
+    font-size: 0.875rem;
+  }
+
+  .chat-input input {
+    font-size: 0.875rem;
+  }
+
+  .chat-input button {
+    font-size: 0.875rem;
+  }
 }
