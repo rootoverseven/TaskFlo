@@ -1,41 +1,38 @@
 import express from 'express';
-import cors from 'cors'; // Enable CORS
+import cors from 'cors';
 import bodyParser from 'body-parser';
-import {db} from './db/index.js'
-import {todosTable} from './db/schema.js'
+import { db } from './db/index.js';
+import { todosTable, usersTable } from './db/schema.js';
 import { eq, ilike } from 'drizzle-orm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs'; // For loading Swagger YAML
+import YAML from 'yamljs';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 
-// Enable CORS for all routes
 app.use(cors());
-
-// Parse JSON request bodies
 app.use(bodyParser.json());
 
-// Initialize AI models
 const genAI = new GoogleGenerativeAI(`AIzaSyCq9mjqd-kQ0tLVuMpV3qX2TcGaEsSGrT8`);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 const openai = new OpenAI({ apiKey: `${process.env.OPENAI_API_KEY}` });
 
-// Tools
-async function getAllTodos() {
-    const todos = await db.select().from(todosTable);
+async function getAllTodos(nullVal, userId) {
+    const todos = await db.select().from(todosTable).where(eq(todosTable.userId, userId));
     return todos;
 }
 
-async function createTodo(todo) {
-    const [result] = await db.insert(todosTable).values({ todo }).returning({ id: todosTable.id });
+async function createTodo(todo, userId) {
+    const [result] = await db.insert(todosTable).values({ todo, userId }).returning({ id: todosTable.id });
     return result.id;
 }
 
-async function searchTodo(search) {
-    const todos = await db.select().from(todosTable).where(ilike(todosTable.todo, `%${search}%`));
+async function searchTodo(search, userId) {
+    const todos = await db.select().from(todosTable).where(ilike(todosTable.todo, `%${search}%`)).and(eq(todosTable.userId, userId));
     return todos;
 }
 
@@ -64,7 +61,7 @@ todo: String
 created_at: Date time
 updated_at: Date Time
 
-Available tools:
+Available tools, these are the only ablities you have for type:"action":
 - getAllTodos(): Returns all the Todos from Database
 - createTodo(todo: string): Creates a new Todo in the DB and takes todo as a string and returns the id of the created todo
 - deleteTodoById(id string): Deletes the todo by ID given in the DB
@@ -83,60 +80,83 @@ Example:
 { "type": "output", "output": "Your todo has been added successfully" }
 
 you only need to provide the next STATE. not for all the further state.
-I'm saying again and again, JSON as plain text not in Json format. Also do not provide type output response until all the actions has been done and resolved or its important to complete the action
+I'm saying again and again, JSON as plain text not in Json format. Also do not provide type: "output" response until its below scenario:
+1. all the actions has been done and resolved or 
+2. its important to provide out in order to complete the action, or 
+3. the user's last message is just a conversation or talking to you
 Here we START
 `;
 
 let messages = SYSTEM_PROMPT;
 
-// Load Swagger definition
 const swaggerDocument = YAML.load('./swagger.yaml');
-
-// Serve Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// API Endpoint for Chat
-app.post('/api/chat', async (req, res) => {
-    const { message } = req.body;
+const authenticate = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).json({ error: 'Access denied' });
 
-    // Add user message to the conversation
+  try {
+    const decoded = jwt.verify(token, 'your-secret-key');
+    req.userId = decoded.userId;
+    next();
+  } catch (error) {
+    res.status(400).json({ error: 'Invalid token' });
+  }
+};
+
+app.post('/api/signup', async (req, res) => {
+  const { username, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const [user] = await db.insert(usersTable).values({ username, password: hashedPassword }).returning();
+  res.json({ id: user.id, username: user.username });
+});
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.username, username));
+  if (user && await bcrypt.compare(password, user.password)) {
+    const token = jwt.sign({ userId: user.id }, 'your-secret-key', { expiresIn: '1h' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: 'Invalid credentials' });
+  }
+});
+
+app.use('/api/todos', authenticate);
+
+app.post('/api/chat', authenticate, async (req, res) => {
+    const { message } = req.body;
     const userMessage = { type: "user", user: message };
     messages += "\n" + JSON.stringify(userMessage);
 
     while (true) {
-        // Generate AI response
         const result = await model.generateContent(messages);
         const response = JSON.parse(result.response.text());
-
-        // Add AI response to the conversation
+        console.log(response)
         messages += "\n" + JSON.stringify(response);
 
         if (response.type === 'output') {
-            // Send the output to the frontend
             res.json({ response: response.output });
             break;
         } else if (response.type === 'action') {
-            // Execute the action using the tools
             const fn = tools[response.function];
             if (!fn) throw new Error('Invalid Tool Call');
-            const observation = await fn(response.input);
-
-            // Add observation to the conversation
+            const observation = await fn(response.input, req.userId);
             const observationMessage = { type: 'observation', observation };
             messages += "\n" + JSON.stringify(observationMessage);
         }
     }
 });
 
-// API Endpoints for Todos
 app.get('/api/todos', async (req, res) => {
-    const todos = await getAllTodos();
+    const todos = await getAllTodos(null, req.userId);
     res.json(todos);
 });
 
 app.post('/api/todos', async (req, res) => {
     const { todo } = req.body;
-    const id = await createTodo(todo);
+    const id = await createTodo(todo, req.userId);
     res.json({ id });
 });
 
@@ -148,11 +168,10 @@ app.delete('/api/todos/:id', async (req, res) => {
 
 app.get('/api/todos/search', async (req, res) => {
     const { query } = req.query;
-    const todos = await searchTodo(query);
+    const todos = await searchTodo(query, req.userId);
     res.json(todos);
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
