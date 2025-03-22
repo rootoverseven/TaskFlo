@@ -83,7 +83,7 @@ Example:
 { "type": "output", "output": "Your todo has been added successfully" }
 
 you only need to provide the next STATE. not for all the further state.
-I'm saying again and again, JSON as plain text not in Json format.
+I'm saying again and again, JSON as plain text not in Json format. Also do not provide type output response until all the actions has been done and resolved or its important to complete the action
 Here we START
 `;
 
