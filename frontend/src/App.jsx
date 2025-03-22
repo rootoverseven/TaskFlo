@@ -65,9 +65,34 @@ const App = () => {
       const seconds = String(date.getSeconds()).padStart(2, '0');
       return t=="d" ? `${day}/${month}/${year}`:`${hours}:${minutes}:${seconds}`;
   };
+  const emojis = [
+    { size: 'small', duration: '15s', delay: '0s' },
+    { size: 'medium', duration: '20s', delay: '5s' },
+    { size: 'large', duration: '25s', delay: '10s' },
+    { size: 'small', duration: '18s', delay: '3s' },
+    { size: 'medium', duration: '22s', delay: '7s' },
+    { size: 'large', duration: '30s', delay: '12s' },
+  ];
   
     return (
         <div className="app">
+              <div className="background-emojis">
+      {emojis.map((emoji, index) => (
+        <div
+          key={index}
+          className={`emoji ${emoji.size}`}
+          style={{
+            animationDuration: emoji.duration,
+            animationDelay: emoji.delay,
+            left: `${Math.random() * 100}%`, // Random horizontal starting position
+            top: `${Math.random() * 100}%`, // Random vertical starting position
+          }}
+        >
+          🐰
+        </div>
+      ))}
+    </div>
+
             <div className="todo-list">
                 <h2>Todo List</h2>
                 <table>
@@ -92,11 +117,15 @@ const App = () => {
                 </table>
             </div>
             <div className="chat-interface">
-                <h2>Chat with AI Agent</h2>
+                <h2>Chat with Aikriti 🐰</h2>
                 <div className="chat-history">
                     {chatHistory.map((chat, index) => (
+                      <div className='chat-box-wrapper'>
+                       {chat.type == "ai"? <span className='bunny'>🐰</span>:null}
                         <div key={index} className={`chat-message ${chat.type}`}>
+                            {/* {chat.type == "ai"? <><span className='bunny'>🐰</span>{chat.text}</>:<>{chat.text}</>} */}
                             {chat.text}
+                        </div>
                         </div>
                     ))}
                     {isTyping && (
